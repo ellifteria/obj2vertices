@@ -16,7 +16,7 @@ func checkError(err error) {
 	}
 }
 
-func ConvertObj2Vertices(inputFilePath, outputFilePath string) {
+func ConvertObj2Vertices(inputFilePath, outputFilePath string, numOutputVertexCoord int) {
 	objFile, err := os.Open(inputFilePath)
 	checkError(err)
 	defer objFile.Close()
@@ -53,7 +53,11 @@ func ConvertObj2Vertices(inputFilePath, outputFilePath string) {
 	defer outputFile.Close()
 
 	for _, vertex := range allVertices {
-		line := fmt.Sprintf("%f, %f, %f,\n", vertex.X, vertex.Y, vertex.Z)
+		line := fmt.Sprintf("%f, %f, %f,", vertex.X, vertex.Y, vertex.Z)
+		for i := 3; i < numOutputVertexCoord; i++ {
+			line = line + " 1.0,"
+		}
+		line = line + "\n"
 		_, err = outputFile.WriteString(line)
 		checkError(err)
 	}
@@ -64,6 +68,7 @@ func main() {
 
 	inputFilePath := flag.String("input", "", "the path to the .obj input file")
 	outputFilePath := flag.String("output", "out/vertices.obj.txt", "the path to the vertex list output file")
+	numOutputVertexCoords := flag.Int("ncoord", 4, "the number of coordinates in the output vertex list; all coordinates after X, Y, Z are automatically filled with 1.0; must be >= 3")
 
 	flag.Parse()
 
@@ -75,5 +80,9 @@ func main() {
 		log.Fatalln("the input file must be a .obj file")
 	}
 
-	ConvertObj2Vertices(*inputFilePath, *outputFilePath)
+	if *numOutputVertexCoords < 3 {
+		log.Fatalln("the number of output vertex coordinates must be at least 3")
+	}
+
+	ConvertObj2Vertices(*inputFilePath, *outputFilePath, *numOutputVertexCoords)
 }
